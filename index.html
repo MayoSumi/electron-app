@@ -6,17 +6,22 @@
         <title>Hello World!</title>
     </head>
     <body>
-        <h1>Hello World!</h1>
-        <p id="msg">This is sample application!</p>
         <div>
-            <button onclick="doAction();">CLICK</button>
+            <p id="msg">Please click Button!</p>
+            <button onclick="doit ()">
+                Click
+            </button>
         </div>
     </body>
     <script>
-        var counter = 0;
-        function doAction() {
-            let p = document.querySelector("#msg");
-            p.textContent = "count: " + ++counter;
+        const BrowserWindow = window.remote.BrowserWindow;
+
+        function doit () {
+            let w = remote.getCurrentWindow();
+
+            ipcRenderer.invoke('hello', w.id).then((result) => {
+                document.querySelector('#msg').textContent = result;
+            })
         }
     </script>
 </html>

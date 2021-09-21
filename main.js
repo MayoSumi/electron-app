@@ -1,50 +1,72 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserView, BrowserWindow, Menu } = require('electron');
+const path = require('path');
+const { ipcMain } = require('electron');
 
-const html = '<html><head>'
-    + '<title>HTML</title>'
-    + '</head><body>'
-    + '<h1>HTML</h1>'
-    + '<p>This is string content</p>'
-    + '</body></html>';
+const win_name = [
+    'banana', 'orange', 'apple'
+];
+
+ipcMain.handle('hello', (event, arg) => {
+    let ws = BrowserWindow.getAllWindows();
+    for (let n in ws) {
+        let w = ws[n];
+        if (w.id != arg) {
+            w.close();
+        }
+    }
+    return 'only open id= ' + arg;
+})
 
 function createWindow () {
-    const win = new BrowserWindow({
-        width: 800,
-        height: 600
+    win = new BrowserWindow({
+        width: 400,
+        height: 300,
+        webPreferences: {
+            enableRemoteModule: true,
+            preload: path.join(app.getAppPath(), 'preload.js')
+        }
     });
     win.loadFile('index.html');
-
-    let child1 = new BrowserWindow({
-        width: 350,
-        height: 200,
-        parent: win,
-        frame: false,
-        transparent: true
-    });
-    child1.loadURL('modal.html')
-
-    let child2 = new BrowserWindow({
-        width: 350,
-        height: 200,
-        parent: win,
-        opacity: 0.5
-    });
-    child2.loadURL('modal.html')
+    return win.id;
 }
 
-app.whenReady().then(() => {
-    createWindow()
+function createMenu() {
+    let menu_temp = [
+        {
+            label: 'File',
+            submenu: [
+                { label: 'New', click: ()=> {
+                    console.log('Create Menu');
+                    createWindow();
+                }},
+                { type: 'separator' },
+                { label: 'Quit', click: ()=> {
+                    console.log('Quit Menu');
+                    app.quit();
+                }}
+            ]
+        }
+    ];
+    let menu = Menu.buildFromTemplate(menu_temp);
+    Menu.setApplicationMenu(menu);
+}
 
-    // macOS
-    app.on('activate', function () {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow()
-    })
-})
+createMenu();
+app.whenReady().then(createWindow);
 
-// Win & Linux
-app.on('window-all-closed', function () {
-    if (process.platform !== 'darwin') app.quit
-})
+// app.whenReady().then(() => {
+//     createWindow()
+
+//     // macOS
+//     app.on('activate', function () {
+//         if (BrowserWindow.getAllWindows().length === 0) createWindow()
+//     })
+// })
+
+// // Win & Linux
+// app.on('window-all-closed', function () {
+//     if (process.platform !== 'darwin') app.quit
+// })
 
 // window.addEventListener('DOMContentLoad', () => {
 //     const replaceText = (selector, text) => {
